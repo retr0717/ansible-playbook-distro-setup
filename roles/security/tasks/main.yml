@@ -1,0 +1,8 @@
+---
+- name: Restore password-protected sudo for wheel group
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^%wheel\s+ALL=\(ALL\)\s+NOPASSWD:\s+ALL'
+    line: '%wheel ALL=(ALL) ALL'
+    validate: 'visudo -cf %s'
+    backup: yes

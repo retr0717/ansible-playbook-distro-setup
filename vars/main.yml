@@ -1,0 +1,71 @@
+---
+# vars/main.yml
+
+username: r3tr0
+
+# Official repository packages
+repo_packages:
+  - git
+  - neovim
+  - htop
+  - base-devel
+  - networkmanager
+  - docker
+  - docker-compose
+  - docker-buildx
+  - virtualbox
+  - virtualbox-host-modules-arch
+  - gnome-disk-utility
+  - rustup
+  - curl
+  - wget
+  - unzip
+  - openssh
+  - zsh
+  - net-tools
+  - ripgrep
+  - fd
+  - tree-sitter
+  - nodejs
+  - npm
+
+# AUR packages
+aur_packages:
+  - firefox-developer-edition
+  - google-chrome
+  - brave-bin
+  - pyenv
+# Node.js configuration
+node_version: "24"  # Using existing Node.js 24
+
+# Python versions to install via pyenv
+python_versions:
+  - "3.12.5"  # Latest Python 3.12.x
+  - "3.11.9"  # Latest Python 3.11.x
+
+# Rust toolchain
+rust_toolchain: "stable"
+
+# Zsh configuration
+zsh_theme: "robbyrussell"  # Standard Oh My Zsh theme
+zsh_plugins:
+  - git
+  - sudo
+  - docker
+  - docker-compose
+  - rust
+  - node
+  - npm
+  - python
+  - pip
+  - virtualenv
+  - zsh-autosuggestions
+  - zsh-syntax-highlighting
+
+dotfiles_repo: ""  # Add your dotfiles repo URL here or leave empty to skip
+dotfiles_version: master
+
+services_to_enable:
+  - NetworkManager
+  - sshd
+  - docker

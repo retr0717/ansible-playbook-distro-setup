@@ -1,0 +1,41 @@
+---
+- name: Clone dotfiles repository
+  git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "/home/{{ username }}/dotfiles"
+    version: "{{ dotfiles_version }}"
+    force: yes
+  become_user: "{{ username }}"
+  when: dotfiles_repo is defined and dotfiles_repo != ""
+
+- name: Create Neovim config directory
+  file:
+    path: "/home/{{ username }}/.config/nvim"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ username }}"
+    mode: '0755'
+
+- name: Create symbolic links for dotfiles
+  shell: |
+    cd /home/{{ username }}/dotfiles
+    # Add your dotfile linking logic here
+    # Example: ln -sf ~/dotfiles/nvim ~/.config/nvim
+    # Example: ln -sf ~/dotfiles/.zshrc ~/.zshrc
+  become_user: "{{ username }}"
+  when: dotfiles_repo is defined and dotfiles_repo != ""
+
+- name: Set vim alias to nvim in zshrc
+  lineinfile:
+    path: "/home/{{ username }}/.zshrc"
+    line: "{{ item }}"
+    insertafter: EOF
+    create: yes
+  loop:
+    - ''
+    - '# Neovim aliases'
+    - 'alias vim="nvim"'
+    - 'alias vi="nvim"'
+    - 'export EDITOR="nvim"'
+    - 'export VISUAL="nvim"'
+  become_user: "{{ username }}"

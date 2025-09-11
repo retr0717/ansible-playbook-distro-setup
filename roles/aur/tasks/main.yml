@@ -1,0 +1,122 @@
+---
+- name: Install paru (AUR helper)
+  block:
+    - name: Clone paru repository
+      git:
+        repo: https://aur.archlinux.org/paru.git
+        dest: /tmp/paru
+        force: yes
+      become_user: "{{ username }}"
+    
+    - name: Build paru package
+      shell: |
+        cd /tmp/paru
+        makepkg -s --noconfirm
+      become_user: "{{ username }}"
+      args:
+        creates: /tmp/paru/paru-*.pkg.tar.zst
+
+    - name: Find built paru package
+      find:
+        paths: /tmp/paru
+        patterns: "paru-*.pkg.tar.zst"
+      register: paru_package
+
+    - name: Install built paru package
+      pacman:
+        name: "{{ paru_package.files[0].path }}"
+        state: present
+      when: paru_package.files | length > 0
+
+- name: Install AUR packages using paru
+  shell: paru -S --noconfirm --needed {{ item }}
+  loop: "{{ aur_packages | select('!=', 'paru') | list }}"
+  become_user: "{{ username }}"
+  when: aur_packages | length > 1
+  environment:
+    PATH: "/usr/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+
+- name: Setup NVM and install Node.js
+  block:
+    - name: Remove system NVM package if installed (causes permission issues)
+      pacman:
+        name: nvm
+        state: absent
+      ignore_errors: yes
+
+    - name: Install NVM in user directory
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+      args:
+        executable: /bin/bash
+        creates: "/home/{{ username }}/.nvm/nvm.sh"
+      become_user: "{{ username }}"
+
+    - name: Configure NVM in zshrc
+      blockinfile:
+        path: "/home/{{ username }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED NVM BLOCK"
+        block: |
+          # NVM configuration
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+        insertafter: "^# Rust configuration"
+      become_user: "{{ username }}"
+
+    - name: Install Node.js {{ node_version }} using NVM
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        source "$NVM_DIR/nvm.sh"
+        nvm install {{ node_version }}
+        nvm use {{ node_version }}
+        nvm alias default {{ node_version }}
+      args:
+        executable: /bin/bash
+      become_user: "{{ username }}"
+      environment:
+        HOME: "/home/{{ username }}"
+
+    - name: Verify Node.js installation
+      shell: |
+        export NVM_DIR="$HOME/.nvm"
+        source "$NVM_DIR/nvm.sh"
+        echo "NVM version: $(nvm --version)"
+        echo "Node.js version: $(node --version)"
+        echo "npm version: $(npm --version)"
+        echo "NVM current: $(nvm current)"
+      args:
+        executable: /bin/bash
+      become_user: "{{ username }}"
+      environment:
+        HOME: "/home/{{ username }}"
+      register: node_verification
+
+    - name: Display Node.js installation results
+      debug:
+        msg: "{{ node_verification.stdout_lines }}"
+
+- name: Setup pyenv and install Python versions
+  block:
+    - name: Install Python versions with pyenv
+      shell: |
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        pyenv install {{ item }}
+      loop: "{{ python_versions }}"
+      become_user: "{{ username }}"
+      args:
+        executable: /bin/zsh
+        creates: "/home/{{ username }}/.pyenv/versions/{{ item }}"
+
+    - name: Set global Python version to latest installed
+      shell: |
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        pyenv global {{ python_versions[0] }}
+      become_user: "{{ username }}"
+      args:
+        executable: /bin/zsh

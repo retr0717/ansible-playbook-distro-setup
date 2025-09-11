@@ -1,0 +1,15 @@
+---
+- name: Ensure user is in required groups (except docker for now)
+  user:
+    name: "{{ username }}"
+    groups: wheel,audio,video,optical,storage
+    shell: /bin/bash  # Will change to zsh after Oh My Zsh is installed
+    append: yes
+
+- name: Configure passwordless sudo for wheel group during setup
+  lineinfile:
+    path: /etc/sudoers
+    regexp: '^%wheel\s+ALL=\(ALL\)\s+(NOPASSWD:\s+)?ALL'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+    backup: yes

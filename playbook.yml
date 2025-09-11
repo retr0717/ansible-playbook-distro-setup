@@ -1,0 +1,16 @@
+---
+- name: Setup Fresh Arch Linux System
+  hosts: localhost
+  connection: local
+  become: yes
+  vars_files:
+    - vars/main.yml
+  
+  roles:
+    - users      # Create/configure users first
+    - base       # Install base packages (including zsh)
+    - shell      # Setup zsh after it's installed
+    - aur        # Install AUR packages
+    - services   # Enable system services
+    - dotfiles   # Setup user dotfiles
+    - security   # Restore secure sudo configuration

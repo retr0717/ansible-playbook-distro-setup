@@ -1,0 +1,29 @@
+---
+- name: Update system packages
+  pacman:
+    update_cache: yes
+    upgrade: yes
+
+- name: Install base packages
+  pacman:
+    name: "{{ repo_packages }}"
+    state: present
+
+- name: Add user to docker group (after docker is installed)
+  user:
+    name: "{{ username }}"
+    groups: docker
+    append: yes
+
+- name: Install Rust toolchain
+  shell: |
+    rustup default {{ rust_toolchain }}
+    rustup component add clippy rustfmt
+  become_user: "{{ username }}"
+  environment:
+    PATH: "/home/{{ username }}/.cargo/bin:{{ ansible_env.PATH }}"
+
+- name: Load VirtualBox kernel modules
+  modprobe:
+    name: vboxdrv
+    state: present
