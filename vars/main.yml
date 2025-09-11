@@ -35,6 +35,7 @@ aur_packages:
   - google-chrome
   - brave-bin
   - pyenv
+  - visual-studio-code-bin
   - transmission-gtk
 # Node.js configuration
 node_version: "24"  # Using existing Node.js 24
