@@ -28,6 +28,7 @@ repo_packages:
   - tree-sitter
   - nodejs
   - npm
+  - usbutils
 
 # AUR packages
 aur_packages:
